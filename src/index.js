@@ -2,21 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 
-// class Square extends React.Component {
-//   render() {
-//     return (
-//       <button
-//         className="square"
-//         onClick={() => {
-//           this.props.onClick();
-//         }}
-//       >
-//         {this.props.value}
-//       </button>
-//     );
-//   }
-// }
-
 function Square(props) {
   return (
     <button className="square" onClick={props.onClick}>
@@ -78,15 +63,18 @@ class Game extends React.Component {
       return;
     }
     squares[i] = this.state.xIsNext ? "X" : "O";
+
+    const xIsNext = !this.state.xIsNext;
     this.setState({
-      history: history.concat([{ squares: squares }]),
+      history: history.concat([
+        { squares: squares, xIsNext: xIsNext, move: i },
+      ]),
       stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: xIsNext,
     });
   }
 
   jumpTo(step) {
-    console.log("step", step);
     this.setState({
       stepNumber: step,
       xIsNext: step % 2 === 0,
@@ -103,9 +91,11 @@ class Game extends React.Component {
     }
 
     let moves = history.map((step, move) => {
-      console.log("step move");
-      console.log(step, move);
-      const desc = move ? `Go to move #${move}` : "Go to start";
+      const desc = move
+        ? `Go to move #${move} - ${step.xIsNext ? "O" : "X"}(${
+            Math.floor(step.move / 3) + 1
+          }, ${(step.move % 3) + 1})`
+        : "Go to start";
 
       return (
         <li key={move}>
