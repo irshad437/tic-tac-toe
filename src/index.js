@@ -110,6 +110,15 @@ class Game extends React.Component {
           ""
         )}
         <div className="game">
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: "20px",
+              fontSize: "20px",
+            }}
+          >
+            {status}
+          </div>
           <div className="game-board">
             <Board
               squares={current.squares}
@@ -119,7 +128,6 @@ class Game extends React.Component {
             />
           </div>
           <div className="game-info">
-            <div style={{ textAlign: "center" }}>{status}</div>
             <ol>{moves}</ol>
           </div>
         </div>
