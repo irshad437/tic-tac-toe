@@ -1,43 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-
-function Square(props) {
-  return (
-    <button className="square" onClick={props.onClick}>
-      {props.value}
-    </button>
-  );
-}
-
-class Board extends React.Component {
-  renderSquare(i) {
-    return (
-      <Square
-        value={this.props.squares[i]}
-        onClick={() => {
-          this.props.onClick(i);
-        }}
-      />
-    );
-  }
-
-  render() {
-    return (
-      <div>
-        {[0, 1, 2].map((i) => {
-          return (
-            <div className="board-row" key={i}>
-              {[0, 1, 2].map((j) => {
-                return this.renderSquare(i * 3 + j);
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-}
+import Board from "./components/Board";
+import Popup from "./components/Popup";
 
 class Game extends React.Component {
   constructor(props) {
@@ -46,6 +11,7 @@ class Game extends React.Component {
       history: [{ squares: Array(9).fill(null) }],
       stepNumber: 0,
       xIsNext: true,
+      winner: null,
     };
   }
 
@@ -53,11 +19,21 @@ class Game extends React.Component {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     let current = history[history.length - 1];
     let squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
+    // check if clicking on an already clicked box
+    // or someone has already won
+    if (squares[i] || this.state.winner) {
       return;
     }
+
+    // update clicked box
     squares[i] = this.state.xIsNext ? "X" : "O";
 
+    // check if someone has won
+    if (!this.state.winner && calculateWinner(squares)) {
+      this.setState({ winner: calculateWinner(squares), isPopupOpen: true });
+    }
+
+    // set next player's move
     const xIsNext = !this.state.xIsNext;
     this.setState({
       history: history.concat([
@@ -69,16 +45,35 @@ class Game extends React.Component {
   }
 
   jumpTo(step) {
-    this.setState({
+    let newStates = {
       stepNumber: step,
       xIsNext: step % 2 === 0,
-    });
+    };
+
+    const history = this.state.history.slice(0, newStates.stepNumber + 1);
+    let current = history[history.length - 1];
+    let squares = current.squares.slice();
+
+    // check if someone has won
+    if (calculateWinner(squares)) {
+      newStates.winner = calculateWinner(squares);
+      newStates.isPopupOpen = true;
+    } else {
+      newStates.winner = null;
+      newStates.isPopupOpen = false;
+    }
+
+    this.setState(newStates);
   }
+
+  handleClose = () => {
+    this.setState({ isPopupOpen: false });
+  };
 
   render() {
     const history = this.state.history;
     const current = this.state.history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
+    const winner = this.state.winner;
     let status = `Next player: ${this.state.xIsNext ? "X" : "O"}`;
     if (winner) {
       status = `Winner: ${winner}`;
@@ -105,20 +100,30 @@ class Game extends React.Component {
     });
 
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            onClick={(i) => {
-              this.handleClick(i);
-            }}
+      <>
+        {winner && this.state.isPopupOpen ? (
+          <Popup
+            title={`"${winner}" has won the game!`}
+            onClick={this.handleClose}
           />
+        ) : (
+          ""
+        )}
+        <div className="game">
+          <div className="game-board">
+            <Board
+              squares={current.squares}
+              onClick={(i) => {
+                this.handleClick(i);
+              }}
+            />
+          </div>
+          <div className="game-info">
+            <div>{status}</div>
+            <ol>{moves}</ol>
+          </div>
         </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
-      </div>
+      </>
     );
   }
 }
