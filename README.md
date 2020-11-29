@@ -1,5 +1,7 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Try the game here: https://loving-mcnulty-5afe47.netlify.app/
+
 ## Steps to run the project locally:
 1. Clone the project on your computer
 2. Move to project directory
