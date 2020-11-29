@@ -13,6 +13,7 @@ const Popup = ({ title, onClick }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: 1
       }}
     >
       <span
