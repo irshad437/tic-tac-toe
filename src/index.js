@@ -74,7 +74,7 @@ class Game extends React.Component {
     const history = this.state.history;
     const current = this.state.history[this.state.stepNumber];
     const winner = this.state.winner;
-    let status = `Next player: ${this.state.xIsNext ? "X" : "O"}`;
+    let status = `Turn: ${this.state.xIsNext ? "X" : "O"}`;
     if (winner) {
       status = `Winner: ${winner}`;
     }
@@ -118,10 +118,10 @@ class Game extends React.Component {
               }}
             />
           </div>
-          {/* <div className="game-info">
-            <div>{status}</div>
+          <div className="game-info">
+            <div style={{ textAlign: "center" }}>{status}</div>
             <ol>{moves}</ol>
-          </div> */}
+          </div>
         </div>
       </>
     );
