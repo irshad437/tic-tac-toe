@@ -7,11 +7,20 @@ import Popup from "./components/Popup";
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
+    this.state = this.initialStates();
+  }
+
+  initialStates() {
+    return {
       history: [{ squares: Array(9).fill(null) }],
       stepNumber: 0,
       xIsNext: true,
       winner: null,
+      totalWins: {
+        x: 0,
+        o: 0,
+        tie: 0,
+      },
     };
   }
 
@@ -29,8 +38,18 @@ class Game extends React.Component {
     squares[i] = this.state.xIsNext ? "X" : "O";
 
     // check if someone has won
-    if (!this.state.winner && calculateWinner(squares)) {
-      this.setState({ winner: calculateWinner(squares), isPopupOpen: true });
+    const winner = calculateWinner(squares);
+    if (!this.state.winner && winner) {
+      this.setState({ winner: winner, isPopupOpen: true });
+      this.countWins(winner.toLowerCase());
+    }
+
+    // check if no valid moves left
+    const availableMoves = getaAvailableMoves(squares);
+    if (availableMoves === 0) {
+      // end game; declare a tie
+      this.setState({ winner: "Nobody", isPopupOpen: true });
+      this.countWins("tie");
     }
 
     // set next player's move
@@ -63,6 +82,14 @@ class Game extends React.Component {
       newStates.isPopupOpen = false;
     }
 
+    // check if no valid moves left
+    const availableMoves = getaAvailableMoves(squares);
+    if (availableMoves === 0) {
+      // end game; declare a tie
+      newStates.winner = "Nobody";
+      newStates.isPopupOpen = true;
+    }
+
     this.setState(newStates);
   }
 
@@ -70,34 +97,40 @@ class Game extends React.Component {
     this.setState({ isPopupOpen: false });
   };
 
+  restartGame = () => {
+    this.setState(this.initialStates());
+  };
+
+  undo = () => {
+    let step = this.state.stepNumber - 1;
+    this.jumpTo(step);
+  };
+
+  redo = () => {
+    let step = this.state.stepNumber + 1;
+    this.jumpTo(step);
+  };
+
+  countWins = (winner) => {
+    let totalWins = JSON.parse(JSON.stringify(this.state.totalWins));
+    totalWins[winner]++;
+    this.setState({ totalWins: totalWins });
+  };
+
   render() {
     const history = this.state.history;
-    const current = this.state.history[this.state.stepNumber];
+    const current = history[this.state.stepNumber];
     const winner = this.state.winner;
     let status = `Turn: ${this.state.xIsNext ? "X" : "O"}`;
     if (winner) {
       status = `Winner: ${winner}`;
     }
 
-    let moves = history.map((step, move) => {
-      const desc = move
-        ? `Go to move #${move} - ${step.xIsNext ? "O" : "X"}(${
-            Math.floor(step.move / 3) + 1
-          }, ${(step.move % 3) + 1})`
-        : "Go to start";
+    const winCount = `X: ${this.state.totalWins.x} | O: ${this.state.totalWins.o} | Tie: ${this.state.totalWins.tie}`;
 
-      return (
-        <li key={move}>
-          <button
-            onClick={() => {
-              this.jumpTo(move);
-            }}
-          >
-            {desc}
-          </button>
-        </li>
-      );
-    });
+    const showUndoButton = this.state.stepNumber > 0 ? true : false;
+    const showRedoButton =
+      this.state.stepNumber < history.length - 1 ? true : false;
 
     return (
       <>
@@ -118,6 +151,8 @@ class Game extends React.Component {
             }}
           >
             {status}
+            <br />
+            {winCount}
           </div>
           <div className="game-board">
             <Board
@@ -128,7 +163,34 @@ class Game extends React.Component {
             />
           </div>
           <div className="game-info">
-            <ol>{moves}</ol>
+            {/* undo button */}
+            <button
+              disabled={!showUndoButton ? true : false}
+              onClick={() => {
+                this.undo();
+              }}
+            >
+              undo
+            </button>
+
+            <button
+              onClick={() => {
+                this.restartGame();
+              }}
+            >
+              Restart
+            </button>
+
+            {/* redo button */}
+
+            <button
+              disabled={!showRedoButton ? true : false}
+              onClick={() => {
+                this.redo();
+              }}
+            >
+              redo
+            </button>
           </div>
         </div>
       </>
@@ -155,6 +217,13 @@ function calculateWinner(squares) {
     }
   }
   return null;
+}
+
+// get available moves
+function getaAvailableMoves(squares) {
+  return squares.reduce((count, val) => {
+    return val === null ? count + 1 : count;
+  }, 0);
 }
 
 // ========================================
